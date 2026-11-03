@@ -1,0 +1,122 @@
+// Product Finder data model.
+//
+// Ownership of columns matters here:
+//   * PIM-owned fields are overwritten by every catalogue import.
+//   * App-owned fields (reviews, rating aggregates, delistedAt) are never
+//     touched by the import's update path — this is what makes the seed
+//     safe to re-run without damaging user data.
+
+generator client {
+  provider        = "prisma-client-js"
+  previewFeatures = ["relationJoins"]
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+enum ProductStatus {
+  ACTIVE
+  PHASE_OUT
+  DISCONTINUED
+}
+
+model Product {
+  /// Surrogate key. Reviews reference this, so a SKU correction in the PIM
+  /// would not orphan reviews (we'd only need to remap the sku).
+  id String @id @default(uuid()) @db.Uuid
+
+  // ---- PIM-owned (overwritten by import) ----
+  /// Business key from the PIM. Upsert key for the import, used in URLs.
+  sku             String        @unique
+  name            String
+  chemicalName    String        @map("chemical_name")
+  function        String
+  applicationArea String        @map("application_area")
+  region          String
+  /// Free labels without attributes → array + GIN index instead of a join table.
+  certifications  String[]      @default([])
+  status          ProductStatus
+  launchYear      Int?          @map("launch_year")
+  description     String
+
+  // ---- App-owned (never overwritten by import) ----
+  /// Set when the SKU disappears from the PIM export. We never delete
+  /// products: reviews and shared links must keep working.
+  delistedAt  DateTime? @map("delisted_at")
+  /// Denormalised so "sort by rating" stays an index scan at 50k products.
+  /// Recomputed from reviews in the same transaction as each review insert.
+  ratingAvg   Decimal?  @map("rating_avg") @db.Decimal(3, 2)
+  ratingCount Int       @default(0) @map("rating_count")
+
+  createdAt DateTime @default(now()) @map("created_at")
+  /// Only bumped when PIM data actually changed (import skips unchanged rows).
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  reviews Review[]
+
+  // Facet filters + default visibility (status / delisted).
+  @@index([status, delistedAt])
+  @@index([function])
+  @@index([applicationArea])
+  @@index([region])
+  @@index([certifications], type: Gin)
+  // Sorting
+  @@index([name])
+  @@index([launchYear])
+  @@index([ratingAvg])
+  // Substring search (ILIKE '%term%') — trigram indexes, requires pg_trgm.
+  @@index([name(ops: raw("gin_trgm_ops"))], type: Gin, map: "products_name_trgm_idx")
+  @@index([sku(ops: raw("gin_trgm_ops"))], type: Gin, map: "products_sku_trgm_idx")
+  @@index([chemicalName(ops: raw("gin_trgm_ops"))], type: Gin, map: "products_chemical_name_trgm_idx")
+  @@index([description(ops: raw("gin_trgm_ops"))], type: Gin, map: "products_description_trgm_idx")
+  // Found by `npm run bench:scale`: one unindexed column in the search OR
+  // forced a sequential scan (≈640 ms p50 at 50k rows).
+  @@index([function(ops: raw("gin_trgm_ops"))], type: Gin, map: "products_function_trgm_idx")
+  @@index([applicationArea(ops: raw("gin_trgm_ops"))], type: Gin, map: "products_application_area_trgm_idx")
+  @@map("products")
+}
+
+model Review {
+  id         String  @id @default(uuid()) @db.Uuid
+  productId  String  @map("product_id") @db.Uuid
+  /// 1–5, also enforced by a CHECK constraint in the migration.
+  rating     Int     @db.SmallInt
+  authorName String  @map("author_name") @db.VarChar(80)
+  /// Optional — in B2B, "who" is often less telling than "which company".
+  company    String? @db.VarChar(120)
+  comment    String  @db.VarChar(2000)
+
+  createdAt DateTime @default(now()) @map("created_at")
+
+  /// Restrict: a product with reviews can never be hard-deleted by accident.
+  product Product @relation(fields: [productId], references: [id], onDelete: Restrict)
+
+  @@index([productId, createdAt(sort: Desc)])
+  @@map("reviews")
+}
+
+/// Audit log of catalogue imports — answers "is the finder showing the
+/// latest PIM export?" and keeps the data-quality issues of each run.
+model ImportRun {
+  id         String    @id @default(uuid()) @db.Uuid
+  source     String
+  startedAt  DateTime  @default(now()) @map("started_at")
+  finishedAt DateTime? @map("finished_at")
+  status     String    @db.VarChar(20) // RUNNING | SUCCEEDED | FAILED
+
+  rowsRead   Int @default(0) @map("rows_read")
+  created    Int @default(0)
+  updated    Int @default(0)
+  unchanged  Int @default(0)
+  skipped    Int @default(0)
+  delisted   Int @default(0)
+  relisted   Int @default(0)
+
+  /// [{ line, sku, field, message, severity }]
+  issues Json @default("[]")
+  error  String?
+
+  @@index([startedAt(sort: Desc)])
+  @@map("import_runs")
+}

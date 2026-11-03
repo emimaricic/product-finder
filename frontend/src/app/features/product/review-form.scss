@@ -1,0 +1,110 @@
+.form {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+  padding: 1.25rem 0;
+  border-block: 1px solid var(--border);
+
+  h3 {
+    font-size: var(--text-base);
+  }
+}
+
+.intro {
+  margin-top: -0.75rem;
+  font-size: var(--text-xs);
+  color: var(--muted-foreground);
+}
+
+.row {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 1rem;
+}
+
+.field {
+  display: flex;
+  flex-direction: column;
+  gap: 0.375rem;
+  min-width: 0;
+
+  input,
+  textarea {
+    width: 100%;
+    font-size: var(--text-base); // no iOS zoom on focus
+  }
+
+  textarea {
+    min-height: 6rem;
+    resize: vertical;
+  }
+}
+
+label,
+.label {
+  font-weight: 500;
+}
+
+.optional {
+  font-weight: 400;
+  color: var(--muted-foreground);
+}
+
+.field-foot {
+  display: flex;
+  justify-content: space-between;
+  gap: 1rem;
+}
+
+.hint {
+  font-size: var(--text-xs);
+  color: var(--muted-foreground);
+}
+
+.error {
+  font-size: var(--text-xs);
+  color: var(--destructive);
+  font-weight: 500;
+}
+
+input[aria-invalid='true'],
+textarea[aria-invalid='true'] {
+  border-color: var(--destructive);
+
+  &:focus {
+    border-color: var(--destructive);
+    box-shadow: 0 0 0 3px color-mix(in srgb, var(--destructive) 20%, transparent);
+  }
+}
+
+.server-error {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.625rem 0.875rem;
+  border: 1px solid color-mix(in srgb, var(--destructive) 30%, transparent);
+  border-radius: var(--radius);
+  background: var(--destructive-bg);
+  color: var(--destructive-foreground);
+  font-weight: 500;
+}
+
+.hp {
+  position: absolute;
+  left: -10000px;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+}
+
+.actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 0.5rem;
+}
+
+@media (min-width: 640px) {
+  .row {
+    grid-template-columns: 1fr 1fr;
+  }
+}

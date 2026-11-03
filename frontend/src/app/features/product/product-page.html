@@ -1,0 +1,122 @@
+<div class="page">
+  <nav class="crumbs" aria-label="Breadcrumb">
+    <a routerLink="/" [queryParams]="context.lastSearch()" class="back">
+      <i class="pi pi-arrow-left" aria-hidden="true"></i>
+      Back to results
+    </a>
+  </nav>
+
+  @if (detail(); as p) {
+    <article
+      class="sheet"
+      [attr.aria-labelledby]="'title-' + p.sku"
+      [style.--a]="'var(--fn-' + hue() + '-a)'"
+      [style.--b]="'var(--fn-' + hue() + '-b)'"
+    >
+      <header class="sheet-head">
+        <app-function-glyph [fn]="p.function" size="lg" [transitionName]="'glyph-' + p.sku" />
+        <div class="title-block">
+          <p class="mono sku">{{ p.sku }}</p>
+          <h1 [id]="'title-' + p.sku">{{ p.name }}</h1>
+          <p class="chem">{{ p.chemicalName }}</p>
+        </div>
+        <div class="head-actions">
+          @if (!notice() && lifecycle(); as lc) {
+            <app-status-badge [status]="lc" />
+          }
+          <app-share-button [title]="p.name + ' · Product Finder'" />
+        </div>
+      </header>
+
+      @if (notice(); as n) {
+        <div class="notice" [attr.data-tone]="n.tone" role="status">
+          <i class="pi pi-info-circle" aria-hidden="true"></i>
+          <div>
+            <p class="notice-title">{{ n.title }}</p>
+            <p>{{ n.body }}</p>
+          </div>
+        </div>
+      }
+
+      <p class="description">{{ p.description }}</p>
+
+      <section class="data" aria-labelledby="data-heading">
+        <h2 id="data-heading" class="sr-only">Product data</h2>
+        <dl>
+          <div>
+            <dt>Chemical name</dt>
+            <dd>{{ p.chemicalName }}</dd>
+          </div>
+          <div>
+            <dt>Function</dt>
+            <dd>{{ p.function }}</dd>
+          </div>
+          <div>
+            <dt>Application area</dt>
+            <dd>{{ p.applicationArea }}</dd>
+          </div>
+          <div>
+            <dt>Region</dt>
+            <dd>{{ p.region }}</dd>
+          </div>
+          <div>
+            <dt>Launch year</dt>
+            <dd class="tabular">{{ p.launchYear ?? 'Not specified' }}</dd>
+          </div>
+          <div>
+            <dt>Status</dt>
+            <dd>
+              @if (lifecycle(); as lc) {
+                <app-status-badge [status]="lc" />
+              }
+            </dd>
+          </div>
+          <div class="wide">
+            <dt>Certifications</dt>
+            <dd>
+              @if (p.certifications.length) {
+                <ul class="certs">
+                  @for (cert of p.certifications; track cert) {
+                    <li>{{ cert }}</li>
+                  }
+                </ul>
+              } @else {
+                <span class="none">None listed</span>
+              }
+            </dd>
+          </div>
+        </dl>
+      </section>
+    </article>
+
+    @if (lifecycle(); as lc) {
+      @if (lc !== 'ACTIVE') {
+        <!-- Retiring or gone: replacements matter more than reviews. -->
+        <app-alternatives-section [sku]="p.sku" [lifecycle]="lc" />
+        <app-reviews-section [sku]="p.sku" (created)="onReviewCreated()" />
+      } @else {
+        <app-reviews-section [sku]="p.sku" (created)="onReviewCreated()" />
+        <app-alternatives-section [sku]="p.sku" [lifecycle]="lc" />
+      }
+    }
+  } @else if (notFound()) {
+    <div class="state">
+      <h1>Product not found</h1>
+      <p>There is no product with SKU <span class="mono">{{ sku() }}</span>. Check the link or search the catalogue.</p>
+      <p-button label="Search the catalogue" routerLink="/" />
+    </div>
+  } @else if (product.error()) {
+    <div class="state" role="alert">
+      <h1>Couldn't load this product</h1>
+      <p>{{ errorMessage() }}</p>
+      <p-button label="Try again" severity="secondary" [outlined]="true" (onClick)="product.reload()" />
+    </div>
+  } @else {
+    <div class="sheet" aria-busy="true">
+      <p-skeleton width="6rem" height="0.875rem" />
+      <p-skeleton width="60%" height="2rem" />
+      <p-skeleton width="40%" height="1rem" />
+      <p-skeleton height="5rem" />
+    </div>
+  }
+</div>

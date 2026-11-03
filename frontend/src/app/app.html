@@ -1,0 +1,19 @@
+<header class="app-header">
+  <div class="inner">
+    <a routerLink="/" class="brand" aria-label="Product Finder home">Product Finder</a>
+    <div class="end">
+      @if (context.facets()?.catalogueUpdatedAt; as updatedAt) {
+        <p class="freshness">
+          <span class="pulse" aria-hidden="true"></span>
+          <span class="long">Synced with PIM</span><span class="sr-only short">Synced</span>
+          <time [attr.datetime]="updatedAt">{{ updatedAt | date: 'd MMM y' }}</time>
+        </p>
+      }
+      <app-theme-switch />
+    </div>
+  </div>
+</header>
+
+<main class="app-main">
+  <router-outlet />
+</main>

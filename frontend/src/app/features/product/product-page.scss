@@ -1,0 +1,263 @@
+.page {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+  max-width: 56rem;
+  margin: 0 auto;
+  padding: 1rem var(--gutter) 4rem;
+}
+
+.back {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.375rem;
+  min-height: 2rem;
+  color: var(--muted-foreground);
+  text-decoration: none;
+  font-weight: 500;
+
+  i {
+    font-size: 0.75rem;
+    transition: transform 150ms var(--ease-out);
+  }
+
+  &:hover {
+    color: var(--foreground);
+
+    i {
+      transform: translateX(-2px);
+    }
+  }
+}
+
+/*
+ * The sheet glows faintly in its function's hue from the top-left corner,
+ * the one place the function colour spreads beyond the glyph.
+ */
+.sheet {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+  padding: 1.25rem;
+  background:
+    radial-gradient(
+      120% 70% at 0% 0%,
+      color-mix(in srgb, var(--a) var(--glow-strength), transparent),
+      transparent 60%
+    ),
+    var(--background);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-sm);
+  overflow: hidden;
+
+  // Hairline of the hue along the top edge.
+  &::before {
+    content: '';
+    position: absolute;
+    inset: 0 0 auto;
+    height: 1px;
+    background: linear-gradient(90deg, var(--a), transparent 70%);
+    opacity: 0.8;
+  }
+
+}
+
+.sheet-head {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr);
+  grid-template-areas:
+    'glyph title'
+    'actions actions';
+  align-items: center;
+  gap: 1rem 1rem;
+}
+
+app-function-glyph {
+  grid-area: glyph;
+  align-self: start;
+}
+
+.title-block {
+  grid-area: title;
+  display: flex;
+  flex-direction: column;
+  gap: 0.125rem;
+  min-width: 0;
+
+  h1 {
+    font-size: 1.625rem;
+    line-height: 1.15;
+    letter-spacing: -0.035em;
+    overflow-wrap: anywhere;
+  }
+}
+
+.sku {
+  color: var(--subtle-foreground);
+}
+
+.chem {
+  font-size: var(--text-base);
+  color: var(--muted-foreground);
+}
+
+.head-actions {
+  grid-area: actions;
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+.notice {
+  display: flex;
+  gap: 0.75rem;
+  padding: 0.875rem 1rem;
+  border: 1px solid color-mix(in srgb, var(--c) 28%, transparent);
+  border-radius: var(--radius);
+  background: var(--bg);
+  color: var(--foreground);
+
+  > i {
+    margin-top: 0.1875rem;
+    color: var(--c);
+  }
+
+  &[data-tone='PHASE_OUT'] {
+    --c: var(--status-phase-out);
+    --bg: var(--status-phase-out-bg);
+  }
+  &[data-tone='DISCONTINUED'] {
+    --c: var(--status-discontinued);
+    --bg: var(--status-discontinued-bg);
+  }
+  &[data-tone='DELISTED'] {
+    --c: var(--status-delisted);
+    --bg: var(--status-delisted-bg);
+  }
+}
+
+.notice-title {
+  font-weight: 600;
+  color: var(--c);
+}
+
+.description {
+  max-width: 62ch;
+  font-size: 1.0625rem;
+  line-height: 1.6;
+  letter-spacing: -0.005em;
+}
+
+/* Spec grid: hairline cells, label over value, like a datasheet. */
+.data dl {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  margin: 0;
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  background: var(--border);
+  gap: 1px;
+  overflow: hidden;
+
+  > div {
+    display: flex;
+    flex-direction: column;
+    gap: 0.25rem;
+    padding: 0.75rem 0.875rem;
+    background: var(--background);
+    min-width: 0;
+  }
+
+  > .wide {
+    grid-column: 1 / -1;
+  }
+}
+
+dt {
+  font-size: var(--text-xs);
+  color: var(--muted-foreground);
+}
+
+dd {
+  margin: 0;
+  font-weight: 500;
+  overflow-wrap: anywhere;
+}
+
+.certs {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.375rem;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+
+  li {
+    padding: 0 0.5rem;
+    border: 1px solid var(--border);
+    border-radius: 999px;
+    background: var(--background);
+    font-size: var(--text-xs);
+    font-weight: 500;
+    line-height: 1.5rem;
+    color: var(--foreground);
+  }
+}
+
+.none {
+  color: var(--subtle-foreground);
+  font-weight: 400;
+}
+
+.state {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 0.75rem;
+  padding: 2rem 0;
+
+  h1 {
+    font-size: var(--text-xl);
+  }
+
+  p {
+    color: var(--muted-foreground);
+    max-width: 50ch;
+  }
+}
+
+@media (min-width: 768px) {
+  .page {
+    padding-top: 1.5rem;
+    gap: 1.25rem;
+  }
+
+  .sheet {
+    padding: 2rem 2.25rem 2.25rem;
+    gap: 1.75rem;
+  }
+
+  .sheet-head {
+    grid-template-columns: auto minmax(0, 1fr) auto;
+    grid-template-areas: 'glyph title actions';
+    gap: 1.25rem;
+  }
+
+  .head-actions {
+    align-self: start;
+  }
+
+  .title-block h1 {
+    font-size: 2.25rem;
+  }
+
+  .data dl {
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+
+    > .wide {
+      grid-column: span 2;
+    }
+  }
+}

@@ -1,0 +1,272 @@
+@use '@fontsource-variable/geist';
+@use '@fontsource-variable/geist-mono';
+@use 'primeicons/primeicons.css';
+
+/*
+ * Semantic design tokens (shadcn-style vocabulary) for app layout.
+ * PrimeNG components read the matching --p-* tokens from FinderPreset,
+ * which maps onto the same values with light-dark().
+ *
+ * Colour jobs, and only these:
+ *   function hues  → which function a product performs (glyph tiles)
+ *   lifecycle      → Active / Phase-out / Discontinued / No longer offered
+ *   ring           → focus + keyboard selection
+ */
+:root {
+  color-scheme: light dark;
+
+  --page: #fafafa;
+  --background: #ffffff;
+  --foreground: #09090b;
+  --muted: #f4f4f5;
+  --muted-foreground: #52525b;
+  --subtle-foreground: #71717a;
+  --border: #e4e4e7;
+  --border-strong: #d4d4d8;
+  --primary: #09090b;
+  --primary-foreground: #fafafa;
+  --ring: #6366f1;
+  --ring-soft: rgb(99 102 241 / 0.18);
+  --selected: #eef2ff;
+
+  --status-active: #047857;
+  --status-active-bg: #ecfdf5;
+  --status-phase-out: #b45309;
+  --status-phase-out-bg: #fffbeb;
+  --status-discontinued: #52525b;
+  --status-discontinued-bg: #f4f4f5;
+  --status-delisted: #be123c;
+  --status-delisted-bg: #fff1f2;
+
+  --star: #09090b;
+  --star-empty: #d4d4d8;
+  --destructive: #dc2626;
+  --destructive-foreground: #b91c1c;
+  --destructive-bg: #fef2f2;
+
+  --header-bg: rgb(255 255 255 / 0.8);
+  --glow-strength: 16%;
+
+  --radius: 10px;
+  --radius-sm: 6px;
+  --radius-lg: 14px;
+  --shadow-xs: 0 1px 2px 0 rgb(0 0 0 / 0.04);
+  --shadow-sm: 0 1px 2px rgb(0 0 0 / 0.04), 0 2px 8px -2px rgb(0 0 0 / 0.06);
+  --shadow-md: 0 1px 2px rgb(0 0 0 / 0.04), 0 8px 24px -6px rgb(0 0 0 / 0.1);
+
+  --font-sans: 'Geist Variable', ui-sans-serif, system-ui, -apple-system, 'Segoe UI', sans-serif;
+  --font-mono: 'Geist Mono Variable', ui-monospace, 'SFMono-Regular', Menlo, monospace;
+
+  // Fixed rem scale (product UI), ratio ~1.125 with a display step.
+  --text-xs: 0.75rem;
+  --text-sm: 0.875rem;
+  --text-base: 1rem;
+  --text-lg: 1.125rem;
+  --text-xl: 1.25rem;
+  --text-2xl: 1.5rem;
+  --text-3xl: 2rem;
+
+  --header-h: 3.5rem;
+  --gutter: 1rem;
+  --ease-out: cubic-bezier(0.22, 1, 0.36, 1);
+
+  /* Function hues: [from, to] of each glyph tile's gradient. */
+  --fn-sf-a: #38bdf8; --fn-sf-b: #2563eb; // Surfactant
+  --fn-ef-a: #a78bfa; --fn-ef-b: #7c3aed; // Emulsifier
+  --fn-em-a: #fdba74; --fn-em-b: #ea580c; // Emollient
+  --fn-po-a: #5eead4; --fn-po-b: #0f766e; // Polymer
+  --fn-pr-a: #f0abfc; --fn-pr-b: #a21caf; // Preservative
+  --fn-rm-a: #bef264; --fn-rm-b: #4d7c0f; // Rheology modifier
+  --fn-ao-a: #f9a8d4; --fn-ao-b: #db2777; // Antioxidant
+  --fn-sv-a: #cbd5e1; --fn-sv-b: #475569; // Solvent
+  --fn-xx-a: #d4d4d8; --fn-xx-b: #52525b; // unknown function
+}
+
+/* Dark tokens: applied when the OS is dark (unless the user forced light),
+   or whenever the user picked dark in the theme switcher. */
+@mixin dark-tokens {
+    --page: #09090b;
+    --background: #111113;
+    --foreground: #fafafa;
+    --muted: #1c1c20;
+    --muted-foreground: #a1a1aa;
+    --subtle-foreground: #8b8b94;
+    --border: #26262b;
+    --border-strong: #3a3a41;
+    --primary: #fafafa;
+    --primary-foreground: #09090b;
+    --ring: #818cf8;
+    --ring-soft: rgb(129 140 248 / 0.25);
+    --selected: rgb(129 140 248 / 0.12);
+
+    --status-active: #34d399;
+    --status-active-bg: rgb(52 211 153 / 0.1);
+    --status-phase-out: #fbbf24;
+    --status-phase-out-bg: rgb(251 191 36 / 0.1);
+    --status-discontinued: #a1a1aa;
+    --status-discontinued-bg: rgb(161 161 170 / 0.12);
+    --status-delisted: #fb7185;
+    --status-delisted-bg: rgb(251 113 133 / 0.1);
+
+    --star: #fafafa;
+    --star-empty: #3f3f46;
+    --destructive: #f87171;
+    --destructive-foreground: #fca5a5;
+    --destructive-bg: rgb(248 113 113 / 0.1);
+
+    --header-bg: rgb(9 9 11 / 0.72);
+    --glow-strength: 26%;
+
+    --shadow-xs: 0 1px 2px 0 rgb(0 0 0 / 0.4);
+    --shadow-sm: 0 1px 2px rgb(0 0 0 / 0.4), 0 0 0 1px rgb(255 255 255 / 0.02);
+    --shadow-md: 0 8px 30px -8px rgb(0 0 0 / 0.6);
+}
+
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme='light']) {
+    @include dark-tokens;
+  }
+}
+
+:root[data-theme='dark'] {
+  @include dark-tokens;
+  color-scheme: dark; // drives light-dark() in PrimeNG tokens too
+}
+
+:root[data-theme='light'] {
+  color-scheme: light;
+}
+
+@media (min-width: 768px) {
+  :root {
+    --gutter: 1.5rem;
+  }
+}
+
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+html {
+  -webkit-text-size-adjust: 100%;
+  -webkit-tap-highlight-color: transparent;
+}
+
+body {
+  margin: 0;
+  font-family: var(--font-sans);
+  font-size: var(--text-sm);
+  line-height: 1.5;
+  color: var(--foreground);
+  background: var(--page);
+  font-feature-settings: 'ss01', 'cv11';
+  -webkit-font-smoothing: antialiased;
+  text-rendering: optimizeLegibility;
+}
+
+h1,
+h2,
+h3 {
+  margin: 0;
+  font-weight: 600;
+  letter-spacing: -0.02em;
+  text-wrap: balance;
+}
+
+p {
+  margin: 0;
+  text-wrap: pretty;
+}
+
+a {
+  color: inherit;
+  text-underline-offset: 3px;
+  text-decoration-thickness: 1px;
+}
+
+::selection {
+  background: var(--ring-soft);
+  color: var(--foreground);
+}
+
+:focus-visible {
+  outline: 2px solid var(--ring);
+  outline-offset: 2px;
+}
+
+* {
+  scrollbar-width: thin;
+  scrollbar-color: var(--border-strong) transparent;
+}
+
+/* Phone filter sheet (PrimeNG drawer, our styleClass; rendered as an overlay). */
+.filters-drawer {
+  border-radius: 16px 16px 0 0;
+
+  .p-button-label {
+    white-space: nowrap;
+  }
+}
+
+kbd {
+  display: inline-grid;
+  place-items: center;
+  min-width: 1.25rem;
+  height: 1.25rem;
+  padding: 0 0.3125rem;
+  border: 1px solid var(--border);
+  border-bottom-width: 2px;
+  border-radius: 5px;
+  background: var(--background);
+  color: var(--muted-foreground);
+  font-family: var(--font-mono);
+  font-size: 0.6875rem;
+  line-height: 1;
+}
+
+.mono {
+  font-family: var(--font-mono);
+  font-size: 0.8125rem;
+  letter-spacing: -0.01em;
+}
+
+.tabular {
+  font-variant-numeric: tabular-nums;
+}
+
+.sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
+}
+
+/* Signature move: the function glyph travels from result row to product header. */
+::view-transition-group(*) {
+  animation-duration: 320ms;
+  animation-timing-function: var(--ease-out);
+}
+
+::view-transition-old(root),
+::view-transition-new(root) {
+  animation-duration: 180ms;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after,
+  ::view-transition-group(*),
+  ::view-transition-old(*),
+  ::view-transition-new(*) {
+    animation-duration: 0.01ms !important;
+    transition-duration: 0.01ms !important;
+  }
+}

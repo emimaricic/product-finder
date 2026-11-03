@@ -1,0 +1,53 @@
+<div class="panel">
+  <section class="group">
+    <div class="toggle-row">
+      <label [for]="idPrefix() + '-discontinued'" class="toggle-label">
+        Include discontinued
+        <span class="hint">No longer sold, shown for reference</span>
+      </label>
+      <p-toggleswitch
+        [inputId]="idPrefix() + '-discontinued'"
+        [ngModel]="query().includeDiscontinued"
+        (ngModelChange)="changed.emit({ includeDiscontinued: $event })"
+      />
+    </div>
+    @if (discontinuedCount(); as count) {
+      <p class="hint tabular">{{ count }} discontinued products</p>
+    }
+  </section>
+
+  @for (section of sections; track section.key) {
+    <fieldset class="group">
+      <legend>{{ section.title }}</legend>
+      @if (section.hint) {
+        <p class="hint">{{ section.hint }}</p>
+      }
+
+      @if (facets()) {
+        <ul class="options" role="list">
+          @for (option of options(section.key); track option.value) {
+            @let inputId = id(section.key, option.value);
+            @let checked = isChecked(section.key, option.value);
+            <li [class.zero]="option.count === 0 && !checked">
+              <p-checkbox
+                [inputId]="inputId"
+                [binary]="true"
+                [disabled]="option.count === 0 && !checked"
+                [ngModel]="checked"
+                (ngModelChange)="toggle(section.key, option.value, $event)"
+              />
+              <label [for]="inputId">{{ option.value }}</label>
+              <span class="count tabular" aria-hidden="true">{{ option.count }}</span>
+            </li>
+          }
+        </ul>
+      } @else {
+        <div class="options" aria-hidden="true">
+          @for (row of skeletonRows; track row) {
+            <p-skeleton height="1.25rem" />
+          }
+        </div>
+      }
+    </fieldset>
+  }
+</div>

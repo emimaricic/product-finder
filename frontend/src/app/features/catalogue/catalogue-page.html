@@ -1,0 +1,207 @@
+@let q = query();
+@let result = shown();
+
+<section class="intro" aria-labelledby="results-heading">
+  <div class="intro-head">
+    <h1 id="results-heading">Find the right ingredient</h1>
+    <p class="live-count tabular" aria-live="polite">
+      @if (result) {
+        <strong>{{ result.total }}</strong>
+        {{ result.total === 1 ? 'product' : 'products' }}
+        @if (totalSellable() && !filterCount() && !q.q) {
+          <span class="of">· all sellable</span>
+        }
+      }
+    </p>
+  </div>
+
+  <p-iconfield class="search">
+    <p-inputicon class="pi pi-search" />
+    <input
+      #searchInput
+      pInputText
+      type="search"
+      inputmode="search"
+      enterkeyhint="search"
+      autocomplete="off"
+      placeholder="Search name, SKU, chemistry…"
+      aria-label="Search products"
+      aria-keyshortcuts="/"
+      [ngModel]="searchText()"
+      (ngModelChange)="onSearchInput($event)"
+      (keydown.escape)="clearSearch()"
+    />
+    <p-inputicon class="search-end">
+      @if (searchText()) {
+        <button type="button" class="clear" (click)="clearSearch()" aria-label="Clear search">
+          <i class="pi pi-times" aria-hidden="true"></i>
+        </button>
+      } @else {
+        <kbd class="kbd-hint" aria-hidden="true">/</kbd>
+      }
+    </p-inputicon>
+  </p-iconfield>
+
+  @let functionFacet = facets()?.function ?? [];
+  @if (functionFacet.length) {
+    <app-function-spectrum
+      [facet]="functionFacet"
+      [selected]="q.function"
+      (toggled)="toggleFunction($event)"
+    />
+  }
+</section>
+
+<div class="layout" appResultsKeyboardNav [searchInput]="searchInput">
+  <aside class="sidebar" aria-label="Filters">
+    <div class="sidebar-head">
+      <h2>Filters</h2>
+      @if (filterCount() > 0) {
+        <p-button label="Clear all" [text]="true" size="small" (onClick)="clearFilters()" />
+      }
+    </div>
+    <app-filter-panel idPrefix="side" [facets]="facets()" [query]="q" (changed)="update($event)" />
+  </aside>
+
+  <section class="results" aria-label="Results">
+    <div class="toolbar">
+      <div class="toolbar-row">
+        <p-button
+          class="filters-btn"
+          [label]="filterCount() ? 'Filters (' + filterCount() + ')' : 'Filters'"
+          icon="pi pi-sliders-h"
+          severity="secondary"
+          [outlined]="true"
+          (onClick)="filtersOpen.set(true)"
+        />
+        <p class="toolbar-count tabular" aria-hidden="true">
+          @if (result) {
+            <strong>{{ result.total }}</strong>{{ result.total === 1 ? ' product' : ' products' }}
+          }
+        </p>
+        <span class="kbd-legend" aria-hidden="true"><kbd>↑</kbd><kbd>↓</kbd> to browse · <kbd>↵</kbd> to open</span>
+        <app-share-button class="share share-wide" label="Share search" title="Product Finder search" />
+        <app-share-button class="share share-icon" label="Share search" title="Product Finder search" [iconOnly]="true" />
+        <p-select
+          class="sort"
+          [options]="sortOptions"
+          optionLabel="label"
+          optionValue="value"
+          [ngModel]="q.sort"
+          (ngModelChange)="update({ sort: $event })"
+          ariaLabel="Sort by"
+        />
+      </div>
+
+      @if (chips().length) {
+        <ul class="chips" aria-label="Active filters">
+          @for (chip of chips(); track chip.key + chip.value) {
+            <li>
+              <button type="button" class="chip" (click)="removeChip(chip)">
+                {{ chip.label }}
+                <i class="pi pi-times" aria-hidden="true"></i>
+                <span class="sr-only">Remove filter</span>
+              </button>
+            </li>
+          }
+          <li>
+            <button type="button" class="chip-clear" (click)="clearFilters()">Clear all</button>
+          </li>
+        </ul>
+      }
+    </div>
+
+    <div class="list-wrap" [class.reloading]="products.isLoading() && result">
+      @if (errorMessage(); as message) {
+        <div class="state" role="alert">
+          <i class="pi pi-exclamation-circle state-icon" aria-hidden="true"></i>
+          <h2>Couldn't load products</h2>
+          <p>{{ message }}</p>
+          <p-button label="Try again" severity="secondary" [outlined]="true" (onClick)="products.reload()" />
+        </div>
+      } @else if (!result) {
+        <ul class="list" aria-hidden="true">
+          @for (i of [1, 2, 3, 4, 5, 6]; track i) {
+            <li class="skeleton-row">
+              <p-skeleton width="2.5rem" height="2.5rem" borderRadius="10px" />
+              <div class="sk-text">
+                <p-skeleton width="45%" height="1rem" />
+                <p-skeleton width="70%" height="0.875rem" />
+              </div>
+            </li>
+          }
+        </ul>
+      } @else if (result.total === 0) {
+        <div class="state">
+          <i class="pi pi-search state-icon" aria-hidden="true"></i>
+          <h2>No products match</h2>
+          @if (q.q) {
+            <p>Nothing matches “{{ q.q }}”{{ filterCount() ? ' with these filters' : '' }}.</p>
+          } @else {
+            <p>No product has all of the selected filters.</p>
+          }
+          <div class="state-actions">
+            @if (filterCount()) {
+              <p-button label="Clear filters" severity="secondary" [outlined]="true" (onClick)="clearFilters()" />
+            }
+            @if (q.q) {
+              <p-button label="Clear search" severity="secondary" [outlined]="true" (onClick)="clearSearch()" />
+            }
+            @if (!q.includeDiscontinued) {
+              <p-button
+                label="Include discontinued"
+                [text]="true"
+                (onClick)="update({ includeDiscontinued: true })"
+              />
+            }
+          </div>
+        </div>
+      } @else {
+        <ul class="list">
+          @for (product of result.items; track product.sku) {
+            <li><app-product-row [product]="product" /></li>
+          }
+        </ul>
+
+        @if (result.totalPages > 1) {
+          <div class="pager">
+          <p-paginator
+            [first]="(q.page - 1) * pageSize"
+            [rows]="pageSize"
+            [totalRecords]="result.total"
+            [pageLinkSize]="3"
+            (onPageChange)="onPage($event)"
+          />
+          </div>
+        }
+      }
+    </div>
+  </section>
+</div>
+
+<p-drawer
+  [visible]="filtersOpen()"
+  (visibleChange)="filtersOpen.set($event)"
+  position="bottom"
+  styleClass="filters-drawer"
+  [style]="{ height: '88dvh' }"
+  header="Filters"
+  [blockScroll]="true"
+>
+  <app-filter-panel idPrefix="sheet" [facets]="facets()" [query]="q" (changed)="update($event)" />
+  <ng-template #footer>
+    <div class="drawer-footer">
+      <p-button
+        label="Clear all"
+        severity="secondary"
+        [outlined]="true"
+        [disabled]="!filterCount()"
+        (onClick)="clearFilters()"
+      />
+      <p-button
+        [label]="result ? 'Show ' + result.total + ' results' : 'Show results'"
+        (onClick)="filtersOpen.set(false)"
+      />
+    </div>
+  </ng-template>
+</p-drawer>

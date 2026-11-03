@@ -1,0 +1,27 @@
+<div class="wrap">
+  <div class="spectrum" role="group" aria-label="Filter by function">
+    @for (seg of segments(); track seg.value) {
+      <button
+        type="button"
+        class="seg"
+        [class.on]="seg.selected"
+        [class.dim]="seg.dimmed"
+        [style.flex-grow]="seg.count || 0.0001"
+        [style.--a]="'var(--fn-' + seg.hue + '-a)'"
+        [style.--b]="'var(--fn-' + seg.hue + '-b)'"
+        [attr.aria-pressed]="seg.selected"
+        [attr.aria-label]="seg.value + ', ' + seg.count + ' products'"
+        [attr.title]="seg.value + ' · ' + seg.count"
+        (mouseenter)="hovered.set(seg.value)"
+        (mouseleave)="hovered.set(null)"
+        (focus)="hovered.set(seg.value)"
+        (blur)="hovered.set(null)"
+        (click)="toggled.emit(seg.value)"
+      >
+        <span class="seg-bar"></span>
+        <span class="seg-label" aria-hidden="true">{{ seg.code }}</span>
+      </button>
+    }
+  </div>
+  <p class="spectrum-caption" aria-live="polite">{{ caption() }}</p>
+</div>

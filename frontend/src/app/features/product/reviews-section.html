@@ -1,0 +1,91 @@
+<section class="reviews" aria-labelledby="reviews-heading">
+  <div class="reviews-head">
+    <h2 id="reviews-heading">Customer reviews</h2>
+    @if (!formOpen()) {
+      <p-button label="Write a review" icon="pi pi-pencil" size="small" (onClick)="openForm()" />
+    }
+  </div>
+
+  @if (justPosted()) {
+    <p class="posted" role="status">
+      <i class="pi pi-check-circle" aria-hidden="true"></i>
+      Thanks — your review is published.
+    </p>
+  }
+
+  @if (formOpen()) {
+    <app-review-form [sku]="sku()" (posted)="onPosted($event)" (cancelled)="formOpen.set(false)" />
+  }
+
+  @if (summary(); as s) {
+    @if (s.total > 0) {
+      <div class="summary">
+        <div class="score">
+          <p class="avg tabular">{{ s.ratingAvg?.toFixed(1) }}</p>
+          <app-rating-stars [value]="s.ratingAvg" size="lg" />
+          <p class="based tabular">{{ s.ratingCount }} {{ s.ratingCount === 1 ? 'review' : 'reviews' }}</p>
+        </div>
+        <ul class="bars" aria-label="Rating distribution">
+          @for (bar of bars(); track bar.stars) {
+            <li>
+              <span class="bar-label tabular">{{ bar.stars }}<i class="pi pi-star-fill" aria-hidden="true"></i></span>
+              <span class="bar-track" aria-hidden="true"><span class="bar-fill" [style.width.%]="bar.pct"></span></span>
+              <span class="bar-count tabular">{{ bar.count }}</span>
+              <span class="sr-only">{{ bar.stars }} stars: {{ bar.count }}</span>
+            </li>
+          }
+        </ul>
+      </div>
+
+      <ol class="list">
+        @for (review of items(); track review.id) {
+          <li class="review">
+            <div class="review-head">
+              <app-rating-stars [value]="review.rating" />
+              <time class="date" [attr.datetime]="review.createdAt">{{ review.createdAt | date: 'd MMM y' }}</time>
+            </div>
+            <p class="comment">{{ review.comment }}</p>
+            <p class="author">
+              {{ review.authorName }}
+              @if (review.company) {
+                <span class="company">· {{ review.company }}</span>
+              }
+            </p>
+          </li>
+        }
+      </ol>
+
+      @if (hasMore()) {
+        <div class="more">
+          <p-button
+            [label]="'Show more reviews (' + (s.total - items().length) + ')'"
+            severity="secondary"
+            [outlined]="true"
+            [loading]="loadingMore()"
+            (onClick)="loadMore()"
+          />
+          @if (loadMoreError(); as err) {
+            <p class="error" role="alert">{{ err }}</p>
+          }
+        </div>
+      }
+    } @else if (!formOpen()) {
+      <div class="empty">
+        <p class="empty-title">No reviews yet</p>
+        <p>Used this product? Your experience helps other formulators decide.</p>
+      </div>
+    }
+  } @else if (firstPage.error()) {
+    <div class="empty" role="alert">
+      <p class="empty-title">Reviews couldn't be loaded</p>
+      <p>{{ errorMessage() }}</p>
+      <p-button label="Try again" size="small" severity="secondary" [outlined]="true" (onClick)="firstPage.reload()" />
+    </div>
+  } @else {
+    <div class="loading" aria-busy="true">
+      <p-skeleton width="8rem" height="2rem" />
+      <p-skeleton height="3.5rem" />
+      <p-skeleton height="3.5rem" />
+    </div>
+  }
+</section>

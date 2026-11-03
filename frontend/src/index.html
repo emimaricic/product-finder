@@ -1,0 +1,21 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <title>Product Finder</title>
+  <meta name="description" content="Find the right specialty chemical for your application.">
+  <base href="/">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <link rel="icon" type="image/x-icon" href="favicon.ico">
+  <!-- Apply the saved theme before first paint (no flash of the wrong theme). -->
+  <script>
+    try {
+      var t = localStorage.getItem('pf-theme');
+      if (t === 'light' || t === 'dark') document.documentElement.setAttribute('data-theme', t);
+    } catch (e) {}
+  </script>
+</head>
+<body>
+  <app-root></app-root>
+</body>
+</html>

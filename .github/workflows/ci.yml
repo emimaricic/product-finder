@@ -1,0 +1,87 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  backend:
+    name: Backend · lint, unit, e2e
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: backend
+    services:
+      postgres:
+        image: postgres:17-alpine
+        env:
+          POSTGRES_USER: finder
+          POSTGRES_PASSWORD: finder
+          POSTGRES_DB: product_finder_test
+        ports: ['5434:5432']
+        options: >-
+          --health-cmd "pg_isready -U finder -d product_finder_test"
+          --health-interval 5s --health-timeout 5s --health-retries 10
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version-file: .nvmrc
+          cache: npm
+          cache-dependency-path: backend/package-lock.json
+      - run: npm ci
+      - run: npx eslint "{src,test}/**/*.ts" --max-warnings=0
+      - run: npm run build
+      - run: npm test
+      - name: Migrate test database (from an empty DB, like a reviewer would)
+        run: npm run db:test:prepare
+      - run: npm run test:e2e
+
+  frontend:
+    name: Frontend · lint, test, build
+    runs-on: ubuntu-latest
+    env:
+      # Optional repo secret; without it the committed Community key is used.
+      PRIMEUI_LICENSE_KEY: ${{ secrets.PRIMEUI_LICENSE_KEY }}
+    defaults:
+      run:
+        working-directory: frontend
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version-file: .nvmrc
+          cache: npm
+          cache-dependency-path: frontend/package-lock.json
+      - run: npm ci
+      - run: npm run lint
+      - run: npm test -- --ci
+      - run: npx ng build --configuration production
+
+  docker:
+    name: Docker · full stack boots and seeds
+    runs-on: ubuntu-latest
+    needs: [backend, frontend]
+    env:
+      PRIMEUI_LICENSE_KEY: ${{ secrets.PRIMEUI_LICENSE_KEY }}
+    steps:
+      - uses: actions/checkout@v4
+      - name: Build and start (empty database)
+        run: docker compose up -d --build --wait
+      - name: Smoke test through nginx
+        run: |
+          curl -fsS http://localhost:8080/api/health
+          test "$(curl -fsS 'http://localhost:8080/api/products?pageSize=1' | jq .total)" -gt 0
+          curl -fsS -o /dev/null http://localhost:8080/products/P-10001
+      - name: Seed is idempotent across restarts
+        run: |
+          docker compose restart api
+          docker compose up -d --wait
+          docker compose logs api | grep -E "created=0 updated=0 unchanged=199"
+      - if: failure()
+        run: docker compose logs

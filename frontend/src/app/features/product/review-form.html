@@ -1,0 +1,86 @@
+<form class="form" [formGroup]="form" (ngSubmit)="submit()" novalidate aria-labelledby="review-form-title">
+  <h3 id="review-form-title">Write a review</h3>
+  <p class="intro">Reviews are public and shown with your name. Don't include confidential formulation details.</p>
+
+  <div class="field">
+    <span class="label" id="rating-label">Your rating</span>
+    <p-rating
+      formControlName="rating"
+      ariaLabelledBy="rating-label"
+      [attr.aria-describedby]="showError('rating') ? 'rating-error' : null"
+    />
+    @if (showError('rating')) {
+      <p class="error" id="rating-error">Select a rating from 1 to 5 stars.</p>
+    }
+  </div>
+
+  <div class="row">
+    <div class="field">
+      <label for="review-name">Name</label>
+      <input
+        pInputText
+        id="review-name"
+        formControlName="authorName"
+        autocomplete="name"
+        [attr.maxlength]="limits.nameMax"
+        [attr.aria-invalid]="showError('authorName')"
+        [attr.aria-describedby]="showError('authorName') ? 'name-error' : null"
+      />
+      @if (showError('authorName')) {
+        <p class="error" id="name-error">Enter your name ({{ limits.nameMin }}–{{ limits.nameMax }} characters).</p>
+      }
+    </div>
+
+    <div class="field">
+      <label for="review-company">Company <span class="optional">(optional)</span></label>
+      <input
+        pInputText
+        id="review-company"
+        formControlName="company"
+        autocomplete="organization"
+        [attr.maxlength]="limits.companyMax"
+      />
+    </div>
+  </div>
+
+  <div class="field">
+    <label for="review-comment">Your experience</label>
+    <textarea
+      pTextarea
+      id="review-comment"
+      formControlName="comment"
+      rows="4"
+      [autoResize]="true"
+      placeholder="How did it perform in your formulation? Processing, stability, results…"
+      [attr.maxlength]="limits.commentMax"
+      [attr.aria-invalid]="showError('comment')"
+      aria-describedby="comment-hint"
+    ></textarea>
+    <div class="field-foot">
+      @if (showError('comment')) {
+        <p class="error" id="comment-hint">At least {{ limits.commentMin }} characters.</p>
+      } @else {
+        <p class="hint" id="comment-hint">At least {{ limits.commentMin }} characters.</p>
+      }
+      <p class="hint tabular" aria-hidden="true">{{ commentLength().length }}/{{ limits.commentMax }}</p>
+    </div>
+  </div>
+
+  <!-- Honeypot: invisible to people, tempting for bots. -->
+  <div class="hp" aria-hidden="true">
+    <label for="review-website">Website</label>
+    <input id="review-website" formControlName="website" tabindex="-1" autocomplete="off" />
+  </div>
+
+  @if (serverError(); as message) {
+    <p class="server-error" role="alert">
+      <i class="pi pi-exclamation-circle" aria-hidden="true"></i>
+      {{ message }}
+    </p>
+  }
+
+  <div class="actions">
+    <p-button label="Cancel" severity="secondary" [text]="true" type="button" (onClick)="cancelled.emit()" />
+    <p-button label="Publish review" type="submit" [loading]="submitting()" />
+  </div>
+</form>

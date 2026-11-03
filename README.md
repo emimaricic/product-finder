@@ -59,6 +59,30 @@ cd backend && npm run db:seed -- path/to/export.csv
 
 Every run is logged in the `import_runs` table with its counts and the data-quality issues it found (skipped rows, corrected values, conflicting duplicates). The import also logs a summary to stdout.
 
+### Importing your own export (for example 50,000 products)
+
+The file needs the same columns as `data/products.csv` (`sku, name, chemical_name, function, application_area, region, certifications, status, launch_year, description`), in any order. Certifications are separated with `|`. Put the file into `data/` (the folder is mounted into the API container at `/app/data`), then either:
+
+```bash
+# A) Replace the default export; the import runs on the next start
+cp ~/exports/catalogue.csv data/products.csv
+docker compose restart api
+
+# B) Import a file under its own name, without restarting
+cp ~/exports/catalogue.csv data/catalogue.csv
+docker compose exec api node dist/src/cli/import-catalogue.js /app/data/catalogue.csv
+```
+
+Check the result with `docker compose logs api | grep created=`. You'll see a line like `created=… updated=… unchanged=… skipped=… delisted=…`.
+
+What to expect:
+
+- **Products that are not in the new file are hidden, not deleted** (they become *no longer offered*). Importing an unrelated 50k file hides the 199 sample products, which is the intended nightly-import behaviour.
+- **If the file contains fewer than half of the currently listed SKUs**, nothing is hidden. That looks like a truncated export, so a warning is logged instead.
+- **A file with a wrong header is rejected as a whole**, and nothing changes.
+
+To measure performance at 50,000 products without touching your data, use `npm run bench:scale` (see Tests). It generates synthetic products in the separate test database.
+
 ## Local development (without Docker for the apps)
 
 Prerequisites:

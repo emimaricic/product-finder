@@ -6,13 +6,13 @@ A web app where customers search the specialty chemicals catalogue, narrow it do
 - **Backend:** NestJS 11, Prisma 7, PostgreSQL 17, Jest
 - **Tooling:** Docker Compose, npm
 
-The design decisions are in [DECISIONS.md](DECISIONS.md) and the AI collaboration notes are in [AI_USAGE.md](AI_USAGE.md). The original brief is in [ASSIGNMENT.md](ASSIGNMENT.md).
+The design decisions are in [DECISIONS.md](DECISIONS.md) and the AI collaboration notes are in [AI_USAGE.md](AI_USAGE.md).
 
 ---
 
 ## Quick start (Docker, recommended)
 
-Prerequisite: Docker with the Compose plugin (v2.24 or later).
+Prerequisite: Docker with the Compose plugin.
 
 ```bash
 docker compose up --build
@@ -138,7 +138,7 @@ backend/
   prisma/                     schema + migrations (pg_trgm, CHECK constraint)
   src/catalogue-import/       CSV parse → normalise → plan → transactional upsert
   src/cli/import-catalogue.ts seed / nightly import entry point
-  src/products/               search, facets, detail
+  src/products/               search, facets, detail, alternatives
   src/reviews/                list + anonymous create (rate limited)
   test/                       e2e (import, products, reviews, health)
 frontend/

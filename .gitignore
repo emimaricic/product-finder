@@ -16,3 +16,6 @@ idemo-mobile/
 # Env
 .env
 .env.local
+
+# The original brief stays local
+ASSIGNMENT.md
